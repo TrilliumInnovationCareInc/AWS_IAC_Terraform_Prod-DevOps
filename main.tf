@@ -23,7 +23,7 @@ data "aws_iam_policy_document" "cloudfront_s3_policy" {
 
     actions = ["s3:GetObject"]
 
-    resources = ["arn:aws:s3:::app-prod-trillium-cdn/*"]
+    resources = ["arn:aws:s3:::app-prod-devops-trillium-cdn/*"]
 
     condition {
       test     = "StringEquals"
