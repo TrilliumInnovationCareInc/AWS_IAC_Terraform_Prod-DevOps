@@ -43,35 +43,35 @@ locals {
   tags = {
     ProjectName    = "TrilliumInnovationCareInc"
     Github = "https://github.com/TrilliumInnovationCareInc/AWS_IAC_Terraform_Prod-DevOps.git.git"
-    Environment  = "Prod"
-    Prod = "Terraform Code"
+    Environment  = "Prod-devops"
+    Prod-devops = "Terraform Code"
   }
   igw_tags = {
     ProjectName    = "TrilliumInnovationCareInc"
     Github = "https://github.com/TrilliumInnovationCareInc/AWS_IAC_Terraform_Prod-DevOps.git.git"
-    Environment  = "Prod"
-    Prod = "Terraform Code"
+    Environment  = "Prod-devops"
+    Prod-devops = "Terraform Code"
   }
   nat_gateway_tags = {
     ProjectName    = "TrilliumInnovationCareInc"
     Github = "https://github.com/TrilliumInnovationCareInc/AWS_IAC_Terraform_Prod-DevOps.git.git"
-    Environment  = "Prod"
-    Prod = "Terraform Code"
+    Environment  = "Prod-devops"
+    Prod-devops = "Terraform Code"
     }
   default_route_table_tags ={
     ProjectName    = "TrilliumInnovationCareInc"
     Github = "https://github.com/TrilliumInnovationCareInc/AWS_IAC_Terraform_Prod-DevOps.git.git"
-    Environment  = "Prod"
-    Prod = "Terraform Code"
+    Environment  = "Prod-devops"
+    Prod-devops = "Terraform Code"
   }
 }
 
-################  Prod ##################
+################  Prod-devops ##################
 ################  VPC ##################
 
-module "prod_vpc" {
+module "prod-devops_vpc" {
   source = "terraform-aws-modules/vpc/aws"
-  name = "TrilliumInnovationCare-Prod"
+  name = "TrilliumInnovationCare-Prod-devops"
   cidr = var.vpc_cidr
   azs                 = var.azs
   private_subnets     = [for k, v in var.azs : cidrsubnet(var.vpc_cidr, 8, k)]
@@ -108,7 +108,7 @@ module "prod_vpc" {
 
 ################  KMS Key ##################
 
-module "prod_kms" {
+module "prod-devops_kms" {
   source  = "terraform-aws-modules/kms/aws"
   version = "3.1.1"
   deletion_window_in_days = 7
@@ -167,12 +167,12 @@ module "prod_kms" {
 }
 
 ################  EC2 App Server ##################
-module "prod_security_group" {
+module "prod-devops_security_group" {
   source  = "terraform-aws-modules/security-group/aws"
   version = "~> 4.0"
-  name        = "Prod-App-Security-group"
+  name        = "Prod-devops-App-Security-group"
   description = "Security group for App usage with EC2 instance"
-  vpc_id      = module.prod_vpc.vpc_id
+  vpc_id      = module.prod-devops_vpc.vpc_id
   egress_rules        = ["all-all"]
   ingress_with_source_security_group_id = [
     {
@@ -208,22 +208,22 @@ module "prod_security_group" {
       to_port                  = 3306
       protocol                 = "tcp"
       description              = "rds sg"
-      source_security_group_id = module.prod_db_security_group.security_group_id
+      source_security_group_id = module.prod-devops_db_security_group.security_group_id
     },
   ]
   tags = local.tags
 }
 
-module "prod_app_ec2-instance" {
+module "prod-devops_app_ec2-instance" {
   source  = "terraform-aws-modules/ec2-instance/aws"
   version = "5.7.1"
-  name = "prod-app-trillium"
+  name = "prod-devops-app-trillium"
   ami                    = "ami-02cd5b9bfb2512340"
   instance_type          = "t3.medium" # used to set core count below
   key_name = "Trillium"
-  availability_zone      = element(module.prod_vpc.azs, 0)
-  subnet_id              = element(module.prod_vpc.private_subnets, 0)
-  vpc_security_group_ids = [module.prod_security_group.security_group_id]
+  availability_zone      = element(module.prod-devopsvpc.azs, 0)
+  subnet_id              = element(module.prod-devops_vpc.private_subnets, 0)
+  vpc_security_group_ids = [module.prod-devops_security_group.security_group_id]
   create_eip             = false
   disable_api_stop       = false
   disable_api_termination = true
@@ -249,8 +249,8 @@ module "prod_app_ec2-instance" {
   root_block_device = [
     {
       encrypted   = true
-      # kms_key_id  = module.prod_kms.arn 
-      kms_key_id  = module.prod_kms.key_arn
+      # kms_key_id  = module.prod-devops_kms.arn 
+      kms_key_id  = module.prod-devops_kms.key_arn
       volume_type = "gp3"
       throughput  = 200
       volume_size = 50
@@ -260,24 +260,24 @@ module "prod_app_ec2-instance" {
 
   ebs_block_device = [
     {
-      device_name = "/dev/sdf"
+      device_name = "/dev-devops/sdf"
       volume_type = "gp3"
       volume_size = 50
       throughput  = 200
       encrypted   = true
-      kms_key_id  = module.prod_kms.key_arn
+      kms_key_id  = module.prod-devops_kms.key_arn
       tags = local.tags
     }
   ]
   tags = local.tags
 }
 #######################New Portal and Admin ########################
-module "prod_portal_security_group" {
+module "prod-devops_portal_security_group" {
   source  = "terraform-aws-modules/security-group/aws"
   version = "~> 4.0"
-  name        = "prod-portal-Security-group"
+  name        = "prod-devops-portal-Security-group"
   description = "Security group for App portal usage with EC2 instance"
-  vpc_id      = module.prod_vpc.vpc_id
+  vpc_id      = module.prod-devops_vpc.vpc_id
   egress_rules        = ["all-all"]
   ingress_with_source_security_group_id = [
     {
@@ -320,22 +320,22 @@ module "prod_portal_security_group" {
       to_port                  = 3306
       protocol                 = "tcp"
       description              = "rds sg"
-      source_security_group_id = module.prod_db_security_group.security_group_id
+      source_security_group_id = module.prod-devops_db_security_group.security_group_id
     },
   ]
   tags = local.tags
 }
 
-module "prod_portal_ec2-instance" {
+module "prod-devops_portal_ec2-instance" {
   source  = "terraform-aws-modules/ec2-instance/aws"
   version = "5.7.1"
-  name = "prod-portal-trillium"
+  name = "prod-devops-portal-trillium"
   ami                    = "ami-02cd5b9bfb2512340"
   instance_type          = "t3.medium" # used to set core count below
   key_name = "Trillium"
-  availability_zone      = element(module.prod_vpc.azs, 0)
-  subnet_id              = element(module.prod_vpc.private_subnets, 0)
-  vpc_security_group_ids = [module.prod_portal_security_group.security_group_id]
+  availability_zone      = element(module.prod-devops_vpc.azs, 0)
+  subnet_id              = element(module.prod-devops_vpc.private_subnets, 0)
+  vpc_security_group_ids = [module.prod-devops_portal_security_group.security_group_id]
   create_eip             = false
   disable_api_stop       = false
   create_iam_instance_profile = true
@@ -361,7 +361,7 @@ module "prod_portal_ec2-instance" {
   root_block_device = [
     {
       encrypted   = true
-      kms_key_id  = module.prod_kms.key_arn
+      kms_key_id  = module.prod-devops_kms.key_arn
       volume_type = "gp3"
       throughput  = 200
       volume_size = 50
@@ -371,12 +371,12 @@ module "prod_portal_ec2-instance" {
 
   ebs_block_device = [
     {
-      device_name = "/dev/sdf"
+      device_name = "/prod-devops/sdf"
       volume_type = "gp3"
       volume_size = 50
       throughput  = 200
       encrypted   = true
-      kms_key_id  = module.prod_kms.key_arn
+      kms_key_id  = module.prod-devops_kms.key_arn
       tags = local.tags
     }
   ]
@@ -389,9 +389,9 @@ module "prod_portal_ec2-instance" {
 module "jump_security_group" {
   source  = "terraform-aws-modules/security-group/aws"
   version = "~> 4.0"
-  name        = "prod-jump-Security-group"
+  name        = "prod-devops-jump-Security-group"
   description = "Security group for App usage with EC2 instance"
-  vpc_id      = module.prod_vpc.vpc_id
+  vpc_id      = module.prod-devops_vpc.vpc_id
   egress_rules        = ["all-all"]
   ingress_with_cidr_blocks = [
     {
@@ -405,15 +405,15 @@ module "jump_security_group" {
   tags = local.tags
 }
 
-module "prod_jump_ec2-instance" {
+module "prod-devops_jump_ec2-instance" {
   source  = "terraform-aws-modules/ec2-instance/aws"
   version = "5.7.1"
   name = "prod-jump-trillium"
   ami                    = "ami-0c2fbdf39cd459dd8"
   instance_type          = "t3.medium" # used to set core count below
   key_name = "Trillium"
-  availability_zone      = element(module.prod_vpc.azs, 0)
-  subnet_id              = element(module.prod_vpc.public_subnets, 0)
+  availability_zone      = element(module.prod-devops_vpc.azs, 0)
+  subnet_id              = element(module.prod-devops_vpc.public_subnets, 0)
   vpc_security_group_ids = [module.jump_security_group.security_group_id]
   create_eip             = true
   metadata_options = {
@@ -436,7 +436,7 @@ module "prod_jump_ec2-instance" {
   root_block_device = [
     {
       encrypted   = true
-      kms_key_id  = module.prod_kms.key_arn
+      kms_key_id  = module.prod-devops_kms.key_arn
       tags = local.tags
     },
   ]
@@ -445,12 +445,12 @@ module "prod_jump_ec2-instance" {
 
 
 ################  RDS App Server ##################
-module "prod_db_security_group" {
+module "prod-devops_db_security_group" {
   source  = "terraform-aws-modules/security-group/aws"
   version = "~> 5.0"
-  name        = "prod-db-app"
+  name        = "prod-devops-db-app"
   description = "MySQL app security group"
-  vpc_id      = module.prod_vpc.vpc_id
+  vpc_id      = module.prod-devops_vpc.vpc_id
   egress_rules        = ["all-all"]
   # ingress_with_cidr_blocks = [
   #   {
@@ -474,23 +474,23 @@ module "prod_db_security_group" {
       to_port                  = 3306
       protocol                 = "tcp"
       description              = "portal sg"
-      source_security_group_id = module.prod_portal_security_group.security_group_id
+      source_security_group_id = module.prod-devopsportal_security_group.security_group_id
     },
     {
       from_port                = 3306
       to_port                  = 3306
       protocol                 = "tcp"
       description              = "api sg"
-      source_security_group_id = module.prod_security_group.security_group_id
+      source_security_group_id = module.prod-devops_security_group.security_group_id
     },
   ]
   tags = local.tags
 }
 
-module "prod_rds" {
+module "prod-devops_rds" {
   source  = "terraform-aws-modules/rds/aws"
   version = "6.10.0"
-  identifier = "app-prod-db-trillium"
+  identifier = "app-prod-devops-db-trillium"
   engine               = "mysql"
   engine_version       = "8.0"
   family               = "mysql8.0" # DB parameter group
@@ -502,14 +502,14 @@ module "prod_rds" {
   storage_type = "gp2"
   deletion_protection = true
 
-  db_name  = "appproddb"
+  db_name  = "appprod-devopsdb"
   username = "admin"
   port     = 3306
-  kms_key_id = module.prod_kms.key_arn
+  kms_key_id = module.prod-devops_kms.key_arn
 
   multi_az               = false
-  db_subnet_group_name   = module.prod_vpc.database_subnet_group
-  vpc_security_group_ids = [module.prod_db_security_group.security_group_id]
+  db_subnet_group_name   = module.prod-devops_vpc.database_subnet_group
+  vpc_security_group_ids = [module.prod-devops_db_security_group.security_group_id]
 
   maintenance_window              = "Mon:00:00-Mon:03:00"
   backup_window                   = "03:00-06:00"
@@ -554,7 +554,7 @@ module "alb_log_bucket" {
   source  = "terraform-aws-modules/s3-bucket/aws"
   version = "~> 4.0"
 
-  bucket_prefix = "app-prod-alb-logs-trillium"
+  bucket_prefix = "app-prod-devops-alb-logs-trillium"
   acl           = "log-delivery-write"
 
   # For example only
@@ -570,10 +570,10 @@ module "alb_log_bucket" {
   tags = local.tags
 }
 
-module "files_bucket_prod_app" {
+module "files_bucket_prod-devops_app" {
   source  = "terraform-aws-modules/s3-bucket/aws"
   version = "~> 4.0"
-  bucket = "app-prod-trillium-files"
+  bucket = "app-prod-devops-trillium-files"
   control_object_ownership = true
   object_ownership         = "ObjectWriter"
 
@@ -592,12 +592,12 @@ module "files_bucket_prod_app" {
  ####################################################
  ####################### AWS ALB ##################
 
-module "prod_alb" {
+module "prod-devops_alb" {
   source  = "terraform-aws-modules/alb/aws"
   # version = "2.4.0"
-  name    = "app-prod-alb-trillium"
-  vpc_id  = module.prod_vpc.vpc_id
-  subnets = module.prod_vpc.public_subnets
+  name    = "app-prod-devops-alb-trillium"
+  vpc_id  = module.prod-devops_vpc.vpc_id
+  subnets = module.prod-devops_vpc.public_subnets
 
   enable_deletion_protection = true
 
@@ -620,13 +620,13 @@ module "prod_alb" {
 
   access_logs = {
     bucket = module.alb_log_bucket.s3_bucket_id
-    prefix = "access-logs-prod"
+    prefix = "access-logs-prod-devops"
   }
 
   connection_logs = {
     bucket  = module.alb_log_bucket.s3_bucket_id
     enabled = true
-    prefix  = "connection-logs-prod"
+    prefix  = "connection-logs-prod-devops"
   }
 
   listeners = {
@@ -637,7 +637,7 @@ module "prod_alb" {
       certificate_arn             = "arn:aws:acm:ca-central-1:710271920634:certificate/feba2469-50ba-4db3-904c-821a5c34009d"
 
       forward = {
-        target_group_key = "prod-app-tg"
+        target_group_key = "prod-devops-app-tg"
       }
 
       rules = {
@@ -645,7 +645,7 @@ module "prod_alb" {
           priority = 110
           actions = [{
             type               = "forward"
-            target_group_key   = "prod-portal-app-tg"
+            target_group_key   = "prod-devops-portal-app-tg"
           }]
           conditions = [{
             host_header = {
@@ -657,7 +657,7 @@ module "prod_alb" {
           priority = 150
           actions = [{
             type               = "forward"
-            target_group_key   = "prod-admin-app-tg"
+            target_group_key   = "prod-devops-admin-app-tg"
 
           }]
           conditions = [{
@@ -671,7 +671,7 @@ module "prod_alb" {
           priority = 250
           actions = [{
             type               = "forward"
-            target_group_key   = "prod-app-tg"
+            target_group_key   = "prod-devops-app-tg"
 
           }]
           conditions = [{
@@ -685,7 +685,7 @@ module "prod_alb" {
           priority = 120
           actions = [{
             type               = "forward"
-            target_group_key   = "prod-admin-api-app-tg"
+            target_group_key   = "prod-devops-admin-api-app-tg"
           }]
           conditions = [{
             host_header = {
@@ -698,7 +698,7 @@ module "prod_alb" {
           priority = 130
           actions = [{
             type               = "forward"
-            target_group_key   = "prod-patient-portal-app-tg"
+            target_group_key   = "prod-devops-patient-portal-app-tg"
 
           }]
           conditions = [{
@@ -712,7 +712,7 @@ module "prod_alb" {
           priority = 190
           actions = [{
             type               = "forward"
-            target_group_key   = "prod-mcedt-app-tg"
+            target_group_key   = "prod-devops-mcedt-app-tg"
 
           }]
           conditions = [{
@@ -726,7 +726,7 @@ module "prod_alb" {
           priority = 290
           actions = [{
             type               = "forward"
-            target_group_key   = "prod-ris-portal-app-tg"
+            target_group_key   = "prod-devops-ris-portal-app-tg"
 
           }]
           conditions = [{
@@ -740,7 +740,7 @@ module "prod_alb" {
           priority = 140
           actions = [{
             type               = "forward"
-            target_group_key   = "prod-support-portal-app-tg"
+            target_group_key   = "prod-devops-support-portal-app-tg"
 
           }]
           conditions = [{
@@ -773,8 +773,8 @@ module "prod_alb" {
   }
 
   target_groups = {
-    prod-app-tg = {
-      name = "app-prod-tg"
+    prod-devops-app-tg = {
+      name = "app-prod-devops-tg"
       protocol                          = "HTTP"
       port                              = 8082
       target_type                       = "instance"
@@ -804,12 +804,12 @@ module "prod_alb" {
       }
 
       protocol_version = "HTTP1"
-      target_id        = module.prod_app_ec2-instance.id
+      target_id        = module.prod-devops_app_ec2-instance.id
       port             = 8082
       tags = local.tags
     },
     prod-portal-app-tg = {
-      name = "portal-app1-prod-tg"
+      name = "portal-app1-prod-devops-tg"
       protocol                          = "HTTP"
       port                              = 8084
       target_type                       = "instance"
@@ -839,12 +839,12 @@ module "prod_alb" {
       }
 
       protocol_version = "HTTP1"
-      target_id        = module.prod_portal_ec2-instance.id
+      target_id        = module.prod-devops_portal_ec2-instance.id
       port             = 8084
       tags = local.tags
     },
-    prod-admin-app-tg = {
-      name = "admin-app-prod-tg"
+    prod-devops-admin-app-tg = {
+      name = "admin-app-prod-devops-tg"
       protocol                          = "HTTP"
       port                              = 8080
       target_type                       = "instance"
@@ -874,12 +874,12 @@ module "prod_alb" {
       }
 
       protocol_version = "HTTP1"
-      target_id        = module.prod_portal_ec2-instance.id
+      target_id        = module.prod-devops_portal_ec2-instance.id
       port             = 8080
       tags = local.tags
     },
-    prod-admin-api-app-tg = {
-      name = "admin-api-prod-tg"
+    prod-devops-admin-api-app-tg = {
+      name = "admin-api-prod-devops-tg"
       protocol                          = "HTTP"
       port                              = 8083
       target_type                       = "instance"
@@ -909,12 +909,12 @@ module "prod_alb" {
       }
 
       protocol_version = "HTTP1"
-      target_id        = module.prod_app_ec2-instance.id
+      target_id        = module.prod-devops_app_ec2-instance.id
       port             = 8083
       tags = local.tags
     },
-    prod-patient-portal-app-tg = {
-      name = "patient-portal-app-prod-tg"
+    prod-devops-patient-portal-app-tg = {
+      name = "patient-portal-app-prod-devops-tg"
       protocol                          = "HTTP"
       port                              = 8084
       target_type                       = "instance"
@@ -944,12 +944,12 @@ module "prod_alb" {
       }
 
       protocol_version = "HTTP1"
-      target_id        = module.prod_portal_ec2-instance.id
+      target_id        = module.prod-devops_portal_ec2-instance.id
       port             = 8084
       tags = local.tags
     },
-    prod-support-portal-app-tg = {
-      name = "prod-support-portal-app"
+    prod-devops-support-portal-app-tg = {
+      name = "prod-devops-support-portal-app"
       protocol                          = "HTTP"
       port                              = 8085
       target_type                       = "instance"
@@ -983,7 +983,7 @@ module "prod_alb" {
       port             = 8085
       tags = local.tags
     },
-    prod-mcedt-app-tg = {
+    prod-devops-mcedt-app-tg = {
       name = "prod-mcedt1-app"
       protocol                          = "HTTP"
       port                              = 8086
@@ -1014,13 +1014,13 @@ module "prod_alb" {
       }
 
       protocol_version = "HTTP1"
-      target_id        = module.prod_app_ec2-instance.id
+      target_id        = module.prod-devops_app_ec2-instance.id
       port             = 8086
       tags = local.tags
     },
 
-    prod-ris-portal-app-tg = {
-      name = "prod-ris-app"
+    prod-devops-ris-portal-app-tg = {
+      name = "prod-devops-ris-app"
       protocol                          = "HTTP"
       port                              = 8081
       target_type                       = "instance"
@@ -1050,59 +1050,59 @@ module "prod_alb" {
       }
 
       protocol_version = "HTTP1"
-      target_id        = module.prod_portal_ec2-instance.id
+      target_id        = module.prod-devops_portal_ec2-instance.id
       port             = 8081
       tags = local.tags
     },
   }
 
   additional_target_group_attachments = {
-    prod-app-alb-other = {
-      target_group_key = "prod-app-tg"
+    prod-devops-app-alb-other = {
+      target_group_key = "prod-devops-app-tg"
       target_type      = "instance"
-      target_id        = module.prod_app_ec2-instance.id
+      target_id        = module.prod-devops_app_ec2-instance.id
       port             = "8082"
     },
-    prod-portal-app-alb-other = {
-      target_group_key = "prod-portal-app-tg"
+    prod-devops-portal-app-alb-other = {
+      target_group_key = "prod-devops-portal-app-tg"
       target_type      = "instance"
-      target_id        = module.prod_portal_ec2-instance.id
+      target_id        = module.prod-devops_portal_ec2-instance.id
       port             = "8084"
     },
-    prod-admin-app-alb-other = {
-      target_group_key = "prod-admin-app-tg"
+    prod-devops-admin-app-alb-other = {
+      target_group_key = "prod-devops-admin-app-tg"
       target_type      = "instance"
-      target_id        = module.prod_portal_ec2-instance.id
+      target_id        = module.prod-devops_portal_ec2-instance.id
       port             = "8080"
     },
-    prod-app-mcedt-alb-other = {
-      target_group_key = "prod-mcedt-app-tg"
+    prod-devops-app-mcedt-alb-other = {
+      target_group_key = "prod-devops-mcedt-app-tg"
       target_type      = "instance"
-      target_id        = module.prod_app_ec2-instance.id
+      target_id        = module.prod-devops_app_ec2-instance.id
       port             = "8086"
     },
-    prod-admin-app-alb-other = {
-      target_group_key = "prod-admin-api-app-tg"
+    prod-devops-admin-app-alb-other = {
+      target_group_key = "prod-devops-admin-api-app-tg"
       target_type      = "instance"
-      target_id        = module.prod_app_ec2-instance.id
+      target_id        = module.prod-devops_app_ec2-instance.id
       port             = "8083"
     },
-    prod-admin-app-alb-other = {
-      target_group_key = "prod-patient-portal-app-tg"
+    prod-devops-admin-app-alb-other = {
+      target_group_key = "prod-devops-patient-portal-app-tg"
       target_type      = "instance"
-      target_id        = module.prod_portal_ec2-instance.id
+      target_id        = module.prod-devops_portal_ec2-instance.id
       port             = "8084"
     },
-    prod-portal-ris-alb-other = {
-      target_group_key = "prod-ris-portal-app-tg"
+    prod-devops-portal-ris-alb-other = {
+      target_group_key = "prod-devops-ris-portal-app-tg"
       target_type      = "instance"
-      target_id        = module.prod_portal_ec2-instance.id
+      target_id        = module.prod-devops_portal_ec2-instance.id
       port             = "8081"
     },
-    prod-admin-app-alb-other = {
-      target_group_key = "prod-support-portal-app-tg"
+    prod-devops-admin-app-alb-other = {
+      target_group_key = "prod-devops-support-portal-app-tg"
       target_type      = "instance"
-      target_id        = module.prod_portal_ec2-instance.id
+      target_id        = module.prod-devops_portal_ec2-instance.id
       port             = "8085"
     },
   }
