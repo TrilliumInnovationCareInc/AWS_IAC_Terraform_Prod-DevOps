@@ -221,7 +221,7 @@ module "prod-devops_app_ec2-instance" {
   ami                    = "ami-02cd5b9bfb2512340"
   instance_type          = "t3.medium" # used to set core count below
   key_name = "Trillium"
-  availability_zone      = element(module.prod-devopsvpc.azs, 0)
+  availability_zone      = element(module.prod-devops_vpc.azs, 0)
   subnet_id              = element(module.prod-devops_vpc.private_subnets, 0)
   vpc_security_group_ids = [module.prod-devops_security_group.security_group_id]
   create_eip             = false
@@ -474,7 +474,7 @@ module "prod-devops_db_security_group" {
       to_port                  = 3306
       protocol                 = "tcp"
       description              = "portal sg"
-      source_security_group_id = module.prod-devopsportal_security_group.security_group_id
+      source_security_group_id = module.prod-devops_portal_security_group.security_group_id
     },
     {
       from_port                = 3306
