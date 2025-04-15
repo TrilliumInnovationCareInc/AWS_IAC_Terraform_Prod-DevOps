@@ -979,7 +979,7 @@ module "prod-devops_alb" {
       }
 
       protocol_version = "HTTP1"
-      target_id        = module.prod_portal_ec2-instance.id
+      target_id        = module.prod-devops_portal_ec2-instance.id
       port             = 8085
       tags = local.tags
     },
