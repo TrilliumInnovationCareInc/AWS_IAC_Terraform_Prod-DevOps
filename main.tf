@@ -1,6 +1,6 @@
 terraform {
   backend "s3" {
-    bucket         = "terraform-codepipline-prod-aws-bucket"
+    bucket         = "terraform-codepipline-prod-devops-aws-bucket"
     key            = "terraform.tfstate"
     region         = "ca-central-1"
   }
@@ -42,25 +42,25 @@ locals {
   current_identity = data.aws_caller_identity.current.arn
   tags = {
     ProjectName    = "TrilliumInnovationCareInc"
-    Github = "https://github.com/TrilliumInnovationCareInc/AWS_IAC_Terraform_Prod.git"
+    Github = "https://github.com/TrilliumInnovationCareInc/AWS_IAC_Terraform_Prod-DevOps.git.git"
     Environment  = "Prod"
     Prod = "Terraform Code"
   }
   igw_tags = {
     ProjectName    = "TrilliumInnovationCareInc"
-    Github = "https://github.com/TrilliumInnovationCareInc/AWS_IAC_Terraform_Prod.git"
+    Github = "https://github.com/TrilliumInnovationCareInc/AWS_IAC_Terraform_Prod-DevOps.git.git"
     Environment  = "Prod"
     Prod = "Terraform Code"
   }
   nat_gateway_tags = {
     ProjectName    = "TrilliumInnovationCareInc"
-    Github = "https://github.com/TrilliumInnovationCareInc/AWS_IAC_Terraform_Prod.git"
+    Github = "https://github.com/TrilliumInnovationCareInc/AWS_IAC_Terraform_Prod-DevOps.git.git"
     Environment  = "Prod"
     Prod = "Terraform Code"
     }
   default_route_table_tags ={
     ProjectName    = "TrilliumInnovationCareInc"
-    Github = "https://github.com/TrilliumInnovationCareInc/AWS_IAC_Terraform_Prod.git"
+    Github = "https://github.com/TrilliumInnovationCareInc/AWS_IAC_Terraform_Prod-DevOps.git.git"
     Environment  = "Prod"
     Prod = "Terraform Code"
   }
@@ -218,7 +218,7 @@ module "prod_app_ec2-instance" {
   source  = "terraform-aws-modules/ec2-instance/aws"
   version = "5.7.1"
   name = "prod-app-trillium"
-  ami                    = "ami-0a590ca28046d073e"
+  ami                    = "ami-02cd5b9bfb2512340"
   instance_type          = "t3.medium" # used to set core count below
   key_name = "Trillium"
   availability_zone      = element(module.prod_vpc.azs, 0)
@@ -330,7 +330,7 @@ module "prod_portal_ec2-instance" {
   source  = "terraform-aws-modules/ec2-instance/aws"
   version = "5.7.1"
   name = "prod-portal-trillium"
-  ami                    = "ami-0a590ca28046d073e"
+  ami                    = "ami-02cd5b9bfb2512340"
   instance_type          = "t3.medium" # used to set core count below
   key_name = "Trillium"
   availability_zone      = element(module.prod_vpc.azs, 0)
@@ -409,7 +409,7 @@ module "prod_jump_ec2-instance" {
   source  = "terraform-aws-modules/ec2-instance/aws"
   version = "5.7.1"
   name = "prod-jump-trillium"
-  ami                    = "ami-0e495ad14fa8f74b5"
+  ami                    = "ami-0c2fbdf39cd459dd8"
   instance_type          = "t3.medium" # used to set core count below
   key_name = "Trillium"
   availability_zone      = element(module.prod_vpc.azs, 0)
