@@ -444,82 +444,82 @@ module "prod_jump_ec2-instance" {
 }
 
 
-################  RDS App Server ##################
+################  RDS Security Group ##################
 module "prod_db_security_group" {
   source  = "terraform-aws-modules/security-group/aws"
   version = "~> 5.0"
+
   name        = "prod-db-app"
   description = "MySQL app security group"
   vpc_id      = module.prod_vpc.vpc_id
-  egress_rules        = ["all-all"]
-  # ingress_with_cidr_blocks = [
-  #   {
-  #     from_port   = 3306
-  #     to_port     = 3306
-  #     protocol    = "tcp"
-  #     description = "Access from VPC"
-  #     cidr_blocks = "10.0.0.0/16"
-  #   },
-  # ]
+  egress_rules = ["all-all"]
+
   ingress_with_source_security_group_id = [
     {
-      from_port                = 3306
-      to_port                  = 3306
+      from_port                = 33060
+      to_port                  = 33060
       protocol                 = "tcp"
       description              = "jump sg"
       source_security_group_id = module.jump_security_group.security_group_id
     },
     {
-      from_port                = 3306
-      to_port                  = 3306
+      from_port                = 33060
+      to_port                  = 33060
       protocol                 = "tcp"
       description              = "portal sg"
       source_security_group_id = module.prod_portal_security_group.security_group_id
     },
     {
-      from_port                = 3306
-      to_port                  = 3306
+      from_port                = 33060
+      to_port                  = 33060
       protocol                 = "tcp"
       description              = "api sg"
       source_security_group_id = module.prod_security_group.security_group_id
     },
   ]
+
   tags = local.tags
 }
 
+################  RDS App Server ##################
 module "prod_rds" {
   source  = "terraform-aws-modules/rds/aws"
   version = "6.10.0"
-  identifier = "app-prod-db-trillium"
-  engine               = "mysql"
-  engine_version       = "8.0"
-  family               = "mysql8.0" # DB parameter group
-  major_engine_version = "8.0"      # DB option group
-  instance_class       = "db.t4g.medium"
 
-  allocated_storage     = 20
-  max_allocated_storage = 100
-  storage_type = "gp2"
-  deletion_protection = true
+  identifier             = "app-prod-db-trillium"
+  engine                 = "mysql"
+  engine_version         = "8.0"
+  family                 = "mysql8.0"
+  major_engine_version   = "8.0"
+  instance_class         = "db.t4g.medium"
 
-  db_name  = "appproddb"
-  username = "admin"
-  port     = 3306
-  kms_key_id = module.prod_kms.key_arn
+  allocated_storage      = 20
+  max_allocated_storage  = 100
+  storage_type           = "gp2"
+  deletion_protection    = true
+
+  db_name                = "appproddb"
+  username               = "admin"
+  port                   = 33060
+  kms_key_id             = module.prod_kms.key_arn
 
   multi_az               = false
   db_subnet_group_name   = module.prod_vpc.database_subnet_group
   vpc_security_group_ids = [module.prod_db_security_group.security_group_id]
 
-  maintenance_window              = "Mon:00:00-Mon:03:00"
-  backup_window                   = "03:00-06:00"
+  maintenance_window     = "Mon:00:00-Mon:03:00"
+  backup_window          = "03:00-06:00"
+
+  auto_minor_version_upgrade = true
+
+  # Logging & Monitoring
   enabled_cloudwatch_logs_exports = ["general"]
   create_cloudwatch_log_group     = true
+  create_monitoring_role          = true
+  monitoring_interval             = 60
+  performance_insights_enabled   = false
 
   skip_final_snapshot = true
-  performance_insights_enabled          = false
-  create_monitoring_role                = true
-  monitoring_interval                   = 60
 
   parameters = [
     {
@@ -533,6 +533,7 @@ module "prod_rds" {
   ]
 
   tags = local.tags
+
   db_instance_tags = {
     "Sensitive" = "high"
   }
@@ -550,11 +551,39 @@ module "prod_rds" {
   }
 }
 
+################  RDS Event Subscriptions ##################
+resource "aws_db_event_subscription" "rds_instance_event_subscription" {
+  name          = "prod-rds-instance-events"
+  sns_topic     = "arn:aws:sns:ca-central-1:402893944840:Terraform_Approval_DevOps:b05828f8-8317-448e-b5ff-3fbbd2c9cec5"
+  source_type   = "db-instance"
+  source_ids    = [module.prod_rds.db_instance_identifier]
+
+  event_categories = [
+    "maintenance",
+    "configuration change",
+    "failure"
+  ]
+
+  enabled = true
+  tags    = local.tags
+}
+
+resource "aws_db_event_subscription" "rds_param_group_event_subscription" {
+  name          = "prod-rds-param-events"
+  sns_topic     = "arn:aws:sns:ca-central-1:402893944840:Terraform_Approval_DevOps:b05828f8-8317-448e-b5ff-3fbbd2c9cec5"
+  source_type   = "db-parameter-group"
+
+  event_categories = ["configuration change"]
+
+  enabled = true
+  tags    = local.tags
+}
+
 module "alb_log_bucket" {
   source  = "terraform-aws-modules/s3-bucket/aws"
   version = "~> 4.0"
 
-  bucket_prefix = "app-prod-alb-logs-trillium"
+  bucket_prefix = "app-prod-devOps-alb-logs-trillium"
   acl           = "log-delivery-write"
 
   # For example only
