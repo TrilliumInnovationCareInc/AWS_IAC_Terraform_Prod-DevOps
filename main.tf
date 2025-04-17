@@ -187,21 +187,21 @@ module "prod_security_group" {
       to_port                  = 8082
       protocol                 = "tcp"
       description              = "alb sg"
-      source_security_group_id = "sg-0ef39a4bb9b31ebe8"
+      source_security_group_id = module.prod_db_security_group.security_group_id
     },
     {
       from_port                = 8086
       to_port                  = 8086
       protocol                 = "tcp"
       description              = "alb sg"
-      source_security_group_id = "sg-0ef39a4bb9b31ebe8"
+      source_security_group_id = module.prod_db_security_group.security_group_id
     },
     {
       from_port                = 8083
       to_port                  = 8083
       protocol                 = "tcp"
       description              = "alb sg"
-      source_security_group_id = "sg-0ef39a4bb9b31ebe8"
+      source_security_group_id = module.prod_db_security_group.security_group_id
     },
     {
       from_port                = 3306
@@ -292,28 +292,28 @@ module "prod_portal_security_group" {
       to_port                  = 8081
       protocol                 = "tcp"
       description              = "alb sg"
-      source_security_group_id = "sg-0ef39a4bb9b31ebe8"
+      source_security_group_id = module.prod_db_security_group.security_group_id
     },
     {
       from_port                = 8080
       to_port                  = 8080
       protocol                 = "tcp"
       description              = "alb sg"
-      source_security_group_id = "sg-0ef39a4bb9b31ebe8"
+      source_security_group_id = module.prod_db_security_group.security_group_id
     },
     {
       from_port                = 8084
       to_port                  = 8084
       protocol                 = "tcp"
       description              = "alb sg"
-      source_security_group_id = "sg-0ef39a4bb9b31ebe8"
+      source_security_group_id = module.prod_db_security_group.security_group_id
     },
     {
       from_port                = 8085
       to_port                  = 8085
       protocol                 = "tcp"
       description              = "alb sg"
-      source_security_group_id = "sg-0ef39a4bb9b31ebe8"
+      source_security_group_id = module.prod_db_security_group.security_group_id
     },
     {
       from_port                = 3306
