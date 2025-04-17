@@ -187,21 +187,21 @@ module "prod_security_group" {
       to_port                  = 8082
       protocol                 = "tcp"
       description              = "alb sg"
-      source_security_group_id = "sg-0ef39a4bb9b31ebe8"
+      source_security_group_id = "module.prod_alb_security_group.security_group_id"
     },
     {
       from_port                = 8086
       to_port                  = 8086
       protocol                 = "tcp"
       description              = "alb sg"
-      source_security_group_id = "sg-0ef39a4bb9b31ebe8"
+      source_security_group_id = "module.prod_alb_security_group.security_group_id"
     },
     {
       from_port                = 8083
       to_port                  = 8083
       protocol                 = "tcp"
       description              = "alb sg"
-      source_security_group_id = "sg-0ef39a4bb9b31ebe8"
+      source_security_group_id = "module.prod_alb_security_group.security_group_id"
     },
     {
       from_port                = 3306
@@ -570,7 +570,7 @@ resource "aws_db_event_subscription" "rds_instance_event_subscription" {
 
 resource "aws_db_event_subscription" "rds_param_group_event_subscription" {
   name          = "prod-rds-param-events"
-  sns_topic     = "arn:aws:sns:ca-central-1:402893944840:Terraform_Approval_DevOps:b05828f8-8317-448e-b5ff-3fbbd2c9cec5"
+  sns_topic     = "arn:aws:sns:ca-central-1:402893944840:Terraform_Approval_DevOps"
   source_type   = "db-parameter-group"
 
   event_categories = ["configuration change"]
@@ -583,7 +583,7 @@ module "alb_log_bucket" {
   source  = "terraform-aws-modules/s3-bucket/aws"
   version = "~> 4.0"
 
-  bucket_prefix = "app-prod-devOps-alb-logs-trillium"
+  bucket_prefix = "app-prod-trillium-files-${random_string.suffix.result}"
   acl           = "log-delivery-write"
 
   # For example only
