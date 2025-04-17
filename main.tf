@@ -180,35 +180,40 @@ module "prod_security_group" {
       to_port                  = 22
       protocol                 = "tcp"
       description              = "Jump server"
-      source_security_group_id = module.jump_security_group.security_group_id
+      source_security_group_id = module.prod_alb_security_group.security_group_id
+
     },
     {
       from_port                = 8082
       to_port                  = 8082
       protocol                 = "tcp"
       description              = "alb sg"
-      source_security_group_id = "module.prod_alb_security_group.security_group_id"
+      source_security_group_id = module.prod_alb_security_group.security_group_id
+
     },
     {
       from_port                = 8086
       to_port                  = 8086
       protocol                 = "tcp"
       description              = "alb sg"
-      source_security_group_id = "module.prod_alb_security_group.security_group_id"
+      source_security_group_id = module.prod_alb_security_group.security_group_id
+
     },
     {
       from_port                = 8083
       to_port                  = 8083
       protocol                 = "tcp"
       description              = "alb sg"
-      source_security_group_id = "module.prod_alb_security_group.security_group_id"
+      source_security_group_id = module.prod_alb_security_group.security_group_id
+
     },
     {
       from_port                = 3306
       to_port                  = 3306
       protocol                 = "tcp"
       description              = "rds sg"
-      source_security_group_id = module.prod_db_security_group.security_group_id
+      source_security_group_id = module.prod_alb_security_group.security_group_id
+
     },
   ]
   tags = local.tags
@@ -456,22 +461,22 @@ module "prod_db_security_group" {
 
   ingress_with_source_security_group_id = [
     {
-      from_port                = 33060
-      to_port                  = 33060
+      from_port                = 3306
+      to_port                  = 3306
       protocol                 = "tcp"
       description              = "jump sg"
       source_security_group_id = module.jump_security_group.security_group_id
     },
     {
-      from_port                = 33060
-      to_port                  = 33060
+      from_port                = 3306
+      to_port                  = 3306
       protocol                 = "tcp"
       description              = "portal sg"
       source_security_group_id = module.prod_portal_security_group.security_group_id
     },
     {
-      from_port                = 33060
-      to_port                  = 33060
+      from_port                = 3306
+      to_port                  = 3306
       protocol                 = "tcp"
       description              = "api sg"
       source_security_group_id = module.prod_security_group.security_group_id
@@ -500,7 +505,7 @@ module "prod_rds" {
 
   db_name                = "appproddb"
   username               = "admin"
-  port                   = 33060
+  port                   = 3306
   kms_key_id             = module.prod_kms.key_arn
 
   multi_az               = false
@@ -663,7 +668,7 @@ module "prod_alb" {
       port                        = 443
       protocol                    = "HTTPS"
       ssl_policy                  = "ELBSecurityPolicy-TLS13-1-2-Res-2021-06"
-      certificate_arn             = "arn:aws:acm:ca-central-1:710271920634:certificate/feba2469-50ba-4db3-904c-821a5c34009d"
+      certificate_arn             = "arn:aws:acm:ca-central-1:402893944840:certificate/4e5a3f30-886f-460f-8ee2-90837c816c15"
 
       forward = {
         target_group_key = "prod-app-tg"
@@ -678,7 +683,7 @@ module "prod_alb" {
           }]
           conditions = [{
             host_header = {
-              values = ["portal.trilliuminnovation.com"]
+              values = ["api.smartrxhub.com"]
             },
           }]
         }
@@ -691,7 +696,7 @@ module "prod_alb" {
           }]
           conditions = [{
             host_header = {
-              values = ["admin.trilliuminnovation.com"]
+              values = ["admin-portal.smartrxhub.com"]
             },
           }]
         }
@@ -705,7 +710,7 @@ module "prod_alb" {
           }]
           conditions = [{
             host_header = {
-              values = ["api.trilliuminnovation.com"]
+              values = ["portal.smartrxhub.com"]
             },
           }]
         }
@@ -718,7 +723,7 @@ module "prod_alb" {
           }]
           conditions = [{
             host_header = {
-              values = ["api-admin.trilliuminnovation.com"]
+              values = ["admin-api.smartrxhub.com"]
             },
           }]
         }
@@ -732,7 +737,7 @@ module "prod_alb" {
           }]
           conditions = [{
             host_header = {
-              values = ["portal.trilliuminnovation.com"]
+              values = ["portal-api.smartrxhub.com"]
             },
           }]
         }
@@ -746,7 +751,7 @@ module "prod_alb" {
           }]
           conditions = [{
             host_header = {
-              values = ["mcedt.trilliuminnovation.com"]
+              values = ["mcedt.smartrxhub.com"]
             },
           }]
         }
@@ -760,7 +765,7 @@ module "prod_alb" {
           }]
           conditions = [{
             host_header = {
-              values = ["ris.trilliuminnovation.com"]
+              values = ["ris.smartrxhub.com"]
             },
           }]
         }
@@ -774,7 +779,7 @@ module "prod_alb" {
           }]
           conditions = [{
             host_header = {
-              values = ["support.trilliuminnovation.com"]
+              values = ["support.smartrxhub.com"]
             },
           }]
         }
